@@ -22,6 +22,14 @@ import gradio as gr
 import numpy as np
 from PIL import Image
 
+# ZeroGPU support: required when running on HF Spaces with ZeroGPU hardware.
+# Falls back gracefully when running locally without the `spaces` package.
+try:
+    import spaces
+    ZEROGPU_AVAILABLE = True
+except ImportError:
+    ZEROGPU_AVAILABLE = False
+
 # -------------------------------------------------------------------------
 # CONSTANTS & CONFIGURATION
 # -------------------------------------------------------------------------
@@ -177,8 +185,23 @@ def toggle_bg_options(bg_mode):
     else: # Transparent
         return gr.update(visible=False), gr.update(visible=False), gr.update(visible=False), gr.update(visible=False)
 
-def render_manim(code, scene_name, aspect_ratio, resolution, bg_mode, solid_color, 
-                 grad_start, grad_end, grad_dir, fps, progress=gr.Progress()):
+# Apply @spaces.GPU decorator only when running on ZeroGPU hardware.
+# This requests a GPU allocation for the duration of the render call.
+# Manim itself is CPU-based, but ZeroGPU requires at least one decorated function.
+if ZEROGPU_AVAILABLE:
+    @spaces.GPU(duration=120)
+    def render_manim(code, scene_name, aspect_ratio, resolution, bg_mode, solid_color,
+                     grad_start, grad_end, grad_dir, fps, progress=gr.Progress()):
+        return _render_manim_impl(code, scene_name, aspect_ratio, resolution, bg_mode,
+                                  solid_color, grad_start, grad_end, grad_dir, fps, progress)
+else:
+    def render_manim(code, scene_name, aspect_ratio, resolution, bg_mode, solid_color,
+                     grad_start, grad_end, grad_dir, fps, progress=gr.Progress()):
+        return _render_manim_impl(code, scene_name, aspect_ratio, resolution, bg_mode,
+                                  solid_color, grad_start, grad_end, grad_dir, fps, progress)
+
+def _render_manim_impl(code, scene_name, aspect_ratio, resolution, bg_mode, solid_color,
+                       grad_start, grad_end, grad_dir, fps, progress=gr.Progress()):
     """Main rendering function."""
     # 1. Validation
     if not scene_name:
