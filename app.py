@@ -212,7 +212,7 @@ def toggle_bg_options(bg_mode):
 # This requests a GPU allocation for the duration of the render call.
 # Manim itself is CPU-based, but ZeroGPU requires at least one decorated function.
 if ZEROGPU_AVAILABLE:
-    @spaces.GPU(duration=120)
+    @spaces.GPU(duration=300)
     def render_manim(code, scene_name, aspect_ratio, resolution, bg_mode, solid_color,
                      grad_start, grad_end, grad_dir, fps, progress=gr.Progress()):
         return _render_manim_impl(code, scene_name, aspect_ratio, resolution, bg_mode,
@@ -362,7 +362,7 @@ def _render_manim_impl(code, scene_name, aspect_ratio, resolution, bg_mode, soli
     # 4. Execute Manim
     progress(0.4, desc="Rendering Frames...")
     try:
-        result = subprocess.run(manim_cmd, cwd=temp_dir, capture_output=True, text=True, timeout=120)
+        result = subprocess.run(manim_cmd, cwd=temp_dir, capture_output=True, text=True)
         log_output = result.stdout + "\n" + result.stderr
         if result.returncode != 0:
             if "tex_to_svg_file" in log_output or "latex" in log_output.lower() or "dvisvgm" in log_output.lower():
@@ -377,8 +377,6 @@ def _render_manim_impl(code, scene_name, aspect_ratio, resolution, bg_mode, soli
                     "===========================================================\n"
                 )
             return None, None, "", f"Manim Error:\n{log_output}"
-    except subprocess.TimeoutExpired as e:
-        return None, None, "", f"Render timed out after 120 seconds:\n{e}"
     except Exception as e:
         return None, None, "", f"Execution failed:\n{e}"
 
@@ -414,12 +412,12 @@ def _render_manim_impl(code, scene_name, aspect_ratio, resolution, bg_mode, soli
         ]
         
         try:
-            ff_result = subprocess.run(ffmpeg_cmd, capture_output=True, text=True, timeout=60)
+            ff_result = subprocess.run(ffmpeg_cmd, capture_output=True, text=True)
             if ff_result.returncode != 0:
                 return None, None, "", f"FFmpeg Error:\n{ff_result.stderr}"
             final_output = composited_file
-        except subprocess.TimeoutExpired as e:
-            return None, None, "", f"FFmpeg timed out:\n{e}"
+        except Exception as e:
+            return None, None, "", f"FFmpeg execution failed:\n{e}"
 
     # 6. Copy output to persistent allowed directory for Gradio file serving
     ext = os.path.splitext(final_output)[1]
