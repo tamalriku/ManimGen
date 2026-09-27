@@ -16,6 +16,7 @@ SECURITY WARNING:
 import os
 import re
 import time
+import base64
 import tempfile
 import subprocess
 import shutil
@@ -204,22 +205,68 @@ else:
         return _render_manim_impl(code, scene_name, aspect_ratio, resolution, bg_mode,
                                   solid_color, grad_start, grad_end, grad_dir, fps, progress)
 
+def generate_download_html(file_path: str) -> str:
+    """Generate a client-side Data URI download button for 100% reliable download in Private HF Spaces."""
+    if not file_path or not os.path.exists(file_path):
+        return ""
+    
+    filename = os.path.basename(file_path)
+    ext = os.path.splitext(file_path)[1].lower()
+    mime = "video/mp4" if ext == ".mp4" else "video/quicktime"
+    
+    try:
+        with open(file_path, "rb") as f:
+            file_bytes = f.read()
+        b64 = base64.b64encode(file_bytes).decode("utf-8")
+        data_uri = f"data:{mime};base64,{b64}"
+        size_mb = len(file_bytes) / (1024 * 1024)
+        
+        return f"""
+        <div style="margin: 12px 0;">
+            <a href="{data_uri}" download="{filename}" style="
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                gap: 10px;
+                background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+                color: #ffffff;
+                font-weight: 700;
+                font-size: 16px;
+                padding: 14px 28px;
+                border-radius: 10px;
+                text-decoration: none;
+                box-shadow: 0 4px 14px rgba(16, 185, 129, 0.4);
+                transition: all 0.2s ease-in-out;
+                width: 100%;
+                box-sizing: border-box;
+                text-align: center;
+            ">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="7 10 12 15 17 10"></polyline>
+                    <line x1="12" y1="15" x2="12" y2="3"></line>
+                </svg>
+                📥 Direct Download ({filename} — {size_mb:.2f} MB)
+            </a>
+        </div>
+        """
+    except Exception as e:
+        return f"<p style='color:red;'>Failed to generate direct download link: {e}</p>"
+
 def _render_manim_impl(code, scene_name, aspect_ratio, resolution, bg_mode, solid_color,
                        grad_start, grad_end, grad_dir, fps, progress=gr.Progress()):
     """Main rendering function."""
     # 1. Validation
     if not scene_name:
-        return None, None, "Error: No Scene class selected. Please select one from the dropdown."
+        return None, None, "", "Error: No Scene class selected. Please select one from the dropdown."
     
     denied = check_denylist(code)
     if denied:
-        return None, None, f"Security Warning: Detected potentially dangerous keywords: {', '.join(denied)}. Rendering blocked."
+        return None, None, "", f"Security Warning: Detected potentially dangerous keywords: {', '.join(denied)}. Rendering blocked."
 
     width, height = RESOLUTION_MAP[aspect_ratio][resolution]
     
     # 2. Setup Temporary Directory
-    # We will not clean it up immediately because Gradio needs to serve the output file.
-    # Instead, we just let the OS handle temp files or cleanup periodically.
     temp_dir = tempfile.mkdtemp(prefix="manim_render_")
     code_path = os.path.join(temp_dir, "scene.py")
     
@@ -235,7 +282,6 @@ def _render_manim_impl(code, scene_name, aspect_ratio, resolution, bg_mode, soli
     progress(0.2, desc="Starting Manim Render...")
     output_filename = "output.mov" if bg_mode == "Transparent" else "output.mp4"
     if bg_mode == "Gradient":
-        # We need a transparent background first to overlay on the gradient
         output_filename = "transparent.mov"
 
     manim_cmd = [
@@ -256,15 +302,13 @@ def _render_manim_impl(code, scene_name, aspect_ratio, resolution, bg_mode, soli
         result = subprocess.run(manim_cmd, cwd=temp_dir, capture_output=True, text=True, timeout=120)
         log_output = result.stdout + "\n" + result.stderr
         if result.returncode != 0:
-            return None, None, f"Manim Error:\n{log_output}"
+            return None, None, "", f"Manim Error:\n{log_output}"
     except subprocess.TimeoutExpired as e:
-        return None, None, f"Render timed out after 120 seconds:\n{e}"
+        return None, None, "", f"Render timed out after 120 seconds:\n{e}"
     except Exception as e:
-        return None, None, f"Execution failed:\n{e}"
+        return None, None, "", f"Execution failed:\n{e}"
 
     # Output paths inside manim's media folder
-    # Default manim behavior puts it in: media/videos/scene/<quality>/output_filename
-    # Let's search the temp directory for the generated file
     generated_file = None
     for root, dirs, files in os.walk(temp_dir):
         if output_filename in files:
@@ -272,7 +316,7 @@ def _render_manim_impl(code, scene_name, aspect_ratio, resolution, bg_mode, soli
             break
             
     if not generated_file:
-        return None, None, f"Error: Output file '{output_filename}' not found.\nLog:\n{log_output}"
+        return None, None, "", f"Error: Output file '{output_filename}' not found.\nLog:\n{log_output}"
 
     # 5. Handle Gradient Compositing
     final_output = generated_file
@@ -298,10 +342,10 @@ def _render_manim_impl(code, scene_name, aspect_ratio, resolution, bg_mode, soli
         try:
             ff_result = subprocess.run(ffmpeg_cmd, capture_output=True, text=True, timeout=60)
             if ff_result.returncode != 0:
-                return None, None, f"FFmpeg Error:\n{ff_result.stderr}"
+                return None, None, "", f"FFmpeg Error:\n{ff_result.stderr}"
             final_output = composited_file
         except subprocess.TimeoutExpired as e:
-            return None, None, f"FFmpeg timed out:\n{e}"
+            return None, None, "", f"FFmpeg timed out:\n{e}"
 
     # 6. Copy output to persistent allowed directory for Gradio file serving
     ext = os.path.splitext(final_output)[1]
@@ -315,8 +359,9 @@ def _render_manim_impl(code, scene_name, aspect_ratio, resolution, bg_mode, soli
     except Exception:
         pass
 
+    html_download = generate_download_html(dest_path)
     progress(1.0, desc="Done!")
-    return dest_path, dest_path, log_output
+    return dest_path, dest_path, html_download, log_output
 
 # -------------------------------------------------------------------------
 # GRADIO UI SETUP
@@ -389,7 +434,8 @@ with gr.Blocks(theme=gr.themes.Soft(), title="Manim Render Studio") as demo:
         # RIGHT COLUMN: Output
         with gr.Column(scale=1):
             video_out = gr.Video(label="Rendered Video", interactive=False)
-            file_out = gr.File(label="Download Video")
+            download_html = gr.HTML(label="Direct Download Button")
+            file_out = gr.File(label="Alternative File Link")
             
             with gr.Accordion("Render Log", open=False):
                 log_out = gr.Textbox(label="Console Output", lines=10, max_lines=20, interactive=False)
@@ -418,7 +464,7 @@ with gr.Blocks(theme=gr.themes.Soft(), title="Manim Render Studio") as demo:
             code_input, scene_dropdown, aspect_ratio, resolution, bg_mode, 
             solid_color, grad_start, grad_end, grad_dir, fps
         ],
-        outputs=[video_out, file_out, log_out]
+        outputs=[video_out, file_out, download_html, log_out]
     )
 
 if __name__ == "__main__":
