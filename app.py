@@ -266,6 +266,46 @@ def generate_download_html(file_path: str) -> str:
     except Exception as e:
         return f"<p style='color:red;'>Failed to generate direct download link: {e}</p>"
 
+TEX_POLYFILL_HEADER = """# Automatic Safe Fallback for MathTex / Tex when LaTeX is not installed
+import os
+import re
+import shutil
+import manim
+
+def _clean_tex_to_text(tex_str: str) -> str:
+    s = str(tex_str)
+    s = re.sub(r'\\\\text\{([^}]+)\}', r'\\1', s)
+    s = re.sub(r'\\\\frac\{([^}]+)\}\{([^}]+)\}', r'(\\1 / \\2)', s)
+    replacements = {
+        '\\\\times': '×', '\\\\div': '÷', '\\\\%': '%', '\\\\approx': '≈',
+        '\\\\neq': '≠', '\\\\leq': '≤', '\\\\geq': '≥', '\\\\infty': '∞',
+        '\\\\pi': 'π', '\\\\theta': 'θ', '\\\\alpha': 'α', '\\\\beta': 'β',
+        '\\\\gamma': 'γ', '\\\\delta': 'δ', '\\\\sigma': 'σ', '\\\\omega': 'ω',
+        '\\\\,': ' ', '\\\\;': ' ', '\\\\quad': '  ', '\\\\{': '{', '\\\\}': '}',
+        '\\\\cdot': '·', '\\\\pm': '±', '\\\\mp': '∓', '\\\\sqrt': '√'
+    }
+    for k, v in replacements.items():
+        s = s.replace(k, v)
+    s = re.sub(r'\\\\([a-zA-Z]+)', r'\\1', s)
+    return s.strip()
+
+if shutil.which("latex") is None and shutil.which("xelatex") is None:
+    class SafeMathTex(manim.Text):
+        def __init__(self, *tex_strings, font_size=48, color=None, **kwargs):
+            kwargs.pop("tex_environment", None)
+            kwargs.pop("tex_template", None)
+            kwargs.pop("substrings_to_isolate", None)
+            kwargs.pop("arg_separator", None)
+            cleaned = [_clean_tex_to_text(s) for s in tex_strings]
+            text_val = " ".join(cleaned) if cleaned else ""
+            if not text_val:
+                text_val = " "
+            super().__init__(text_val, font_size=font_size, color=color, **kwargs)
+
+    manim.MathTex = SafeMathTex
+    manim.Tex = SafeMathTex
+"""
+
 def _render_manim_impl(code, scene_name, aspect_ratio, resolution, bg_mode, solid_color,
                        grad_start, grad_end, grad_dir, fps, progress=gr.Progress()):
     """Main rendering function."""
@@ -283,10 +323,15 @@ def _render_manim_impl(code, scene_name, aspect_ratio, resolution, bg_mode, soli
     temp_dir = tempfile.mkdtemp(prefix="manim_render_")
     code_path = os.path.join(temp_dir, "scene.py")
     
-    # Prepend background color for Solid mode
-    processed_code = code
+    # Prepend LaTeX polyfill & background settings
+    header = ""
+    if shutil.which("latex") is None and shutil.which("xelatex") is None:
+        header += TEX_POLYFILL_HEADER + "\n"
+        
     if bg_mode == "Solid Color":
-        processed_code = f'from manim import config\nconfig.background_color = "{solid_color}"\n' + code
+        header += f'from manim import config\nconfig.background_color = "{solid_color}"\n'
+        
+    processed_code = header + code
         
     with open(code_path, "w", encoding="utf-8") as f:
         f.write(processed_code)
