@@ -37,12 +37,15 @@ if shutil.which("ffmpeg") is None:
     except Exception:
         pass
 
-# ZeroGPU support: required when running on HF Spaces with ZeroGPU hardware.
-# Falls back gracefully when running locally without the `spaces` package.
-try:
-    import spaces
-    ZEROGPU_AVAILABLE = True
-except ImportError:
+# ZeroGPU support: only enable when running ON Hugging Face Spaces environment
+IS_ON_HF_SPACES = "SPACE_ID" in os.environ or "SYSTEM" in os.environ
+if IS_ON_HF_SPACES:
+    try:
+        import spaces
+        ZEROGPU_AVAILABLE = True
+    except ImportError:
+        ZEROGPU_AVAILABLE = False
+else:
     ZEROGPU_AVAILABLE = False
 
 # -------------------------------------------------------------------------
