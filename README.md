@@ -1,5 +1,6 @@
 # 🎬 Manim Render Studio
 
+https://github.com/user-attachments/assets/7256e9b1-0f19-4a47-a4f9-bd4bec0168f9
 
 
 **Manim Render Studio** is a fully local, browser-based desktop application designed to write, preview, and render high-quality mathematical and programmatic animations using [Manim Community Edition](https://www.manim.community/).
