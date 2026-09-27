@@ -3,8 +3,10 @@ title: Manim Render Studio
 emoji: 🎬
 colorFrom: purple
 colorTo: blue
-sdk: docker
-app_port: 7860
+sdk: gradio
+sdk_version: 5.29.0
+python_version: 3.11.0
+app_file: app.py
 pinned: false
 license: mit
 short_description: Render Manim animations in your browser
@@ -14,7 +16,7 @@ short_description: Render Manim animations in your browser
 
 **Manim Render Studio** is a browser-based, interactive environment designed to write, preview, and render high-quality mathematical and programmatic animations using [Manim Community Edition](https://www.manim.community/). 
 
-Built with Gradio and packaged as a Dockerized Hugging Face Space, this studio enables rapid prototyping of educational content, scientific visualizations, and social media clips without needing a local Python and TeX Live installation.
+Built with Gradio and deployed as a Hugging Face Space, this studio enables rapid prototyping of educational content, scientific visualizations, and social media clips without needing a local Python and TeX Live installation.
 
 ---
 
@@ -81,20 +83,19 @@ Built with Gradio and packaged as a Dockerized Hugging Face Space, this studio e
 Manim Render Studio supports `Tex` and `MathTex` objects using system TeX Live installations.
 
 ### Pre-installed Packages
-The Docker environment comes pre-configured with essential TeX packages, including:
+The Space environment comes pre-configured (via `packages.txt`) with essential TeX packages, including:
 - `texlive-latex-base`
 - `texlive-latex-extra`
 - `texlive-fonts-recommended`
-- `texlive-fonts-extra`
 - `texlive-science` (provides `amsmath`, `amssymb`, `physics`, `mathtools`, and more)
+- `texlive-latex-recommended`
+- `dvisvgm`, `cm-super`, `ghostscript`
 
 ### Custom LaTeX Packages
-If your scenes require specialized LaTeX packages (such as `tikz`, `chemfig`, or custom font packages), you can add them to the system dependencies inside the `Dockerfile`:
-```dockerfile
-RUN apt-get update && apt-get install -y \
-    texlive-publishers \
-    texlive-pstricks \
-    && rm -rf /var/lib/apt/lists/*
+If your scenes require specialized LaTeX packages (such as `tikz`, `chemfig`, or custom font packages), add them to `packages.txt` in the repo root:
+```text
+texlive-publishers
+texlive-pstricks
 ```
 
 ---
@@ -116,7 +117,7 @@ Please keep in mind the operational constraints of the Hugging Face Spaces envir
 ## 🔒 Security Notice
 
 > [!WARNING]
-> **Arbitrary Code Execution**: Manim scripts are executed as dynamic Python code. While the application runs inside an isolated Docker container under an unprivileged user (`user`), executing untrusted or arbitrary scripts poses inherent security risks. When deploying this space publicly, ensure strict sandboxing, avoid exposing secret environment variables, and monitor resource usage.
+> **Arbitrary Code Execution**: Manim scripts are executed as dynamic Python code. While the application runs inside an isolated HF Space environment, executing untrusted or arbitrary scripts poses inherent security risks. When deploying this space publicly, ensure strict sandboxing, avoid exposing secret environment variables, and monitor resource usage.
 
 ---
 
