@@ -1,117 +1,170 @@
+---
+title: Manim Render Studio
+emoji: 🎬
+colorFrom: purple
+colorTo: blue
+sdk: gradio
+sdk_version: 5.29.0
+python_version: 3.11.0
+app_file: app.py
+pinned: false
+license: mit
+short_description: Render Manim animations in your browser locally or on HF Spaces
+---
+
 # 🎬 Manim Render Studio
 
-**Manim Render Studio** is a browser-based, interactive environment designed to write, preview, and render high-quality mathematical and programmatic animations using [Manim Community Edition](https://www.manim.community/). 
+**Manim Render Studio** is a browser-based, interactive environment designed to write, preview, and render high-quality mathematical and programmatic animations using [Manim Community Edition](https://www.manim.community/).
 
-Built with Gradio and deployed as a Hugging Face Space, this studio enables rapid prototyping of educational content, scientific visualizations, and social media clips without needing a local Python and TeX Live installation.
+Whether you are running locally on your PC or deploying to Hugging Face Spaces, Manim Render Studio makes creating educational content, scientific visualizations, and social media clips effortless.
 
 ---
 
 ## ✨ Features
 
-- **In-Browser Code Editing**: Write or paste Manim Python code directly with syntax-friendly formatting.
-- **Customizable Render Profiles**: Tailor aspect ratio, resolution, frame rate, and background styling to your target platform.
-- **LaTeX Math Rendering**: Native support for beautiful equations and typography via TeX Live.
-- **Real-Time Render Logs**: Live terminal/stdout streaming to monitor progress and debug compilation errors.
-- **Instant Video Playback**: Immediate video playback once rendering finishes.
-- **One-Click Download**: Direct download link for high-quality MP4 exports.
-- **Mobile & Social Presets**: Quick switching between standard widescreen (16:9) and vertical reels/shorts (9:16).
+- **In-Browser Code Editor**: Fixed-height editor with internal scrollbars and syntax highlighting—no more infinite page scrolling when pasting long code.
+- **1-Click Local Execution**: Includes `run_studio.bat` for automated 1-click Windows setup, virtual environment creation, and browser launching.
+- **Unlimited Local Rendering**: Zero timeouts when running locally—render complex, long scenes at high FPS without cloud limits.
+- **Robust LaTeX & Fallback Engine**:
+  - Native LaTeX equation rendering (`MathTex` & `Tex`) via MiKTeX / TeX Live.
+  - Automatic `SafeMathTex` polyfill fallback to `Text(...)` if LaTeX is not installed on the system, preventing crashes.
+- **Customizable Render Profiles**:
+  - **Aspect Ratios**: `16:9` (Widescreen), `9:16` (Reels/Shorts/TikTok), `1:1` (Instagram), `3:2`, `4:3`, `5:4`, `21:9` (Ultrawide).
+  - **Resolutions**: `720p`, `1080p`, and `4K`.
+  - **Frame Rates**: `24 fps` (cinematic), `30 fps` (standard), `60 fps` (ultra-smooth).
+  - **Backgrounds**: Solid colors, 2-color gradients (Vertical, Horizontal, Diagonal), and Alpha Transparency (.mov).
+- **Direct Base64 Video Downloads**: Client-side video downloading that works seamlessly in Private and Public Hugging Face Spaces as well as local setups.
+- **Automatic Scene Detection**: Auto-detects `Scene` class names in uploaded or pasted Python scripts.
 
 ---
 
-## 🚀 Usage Instructions
+## 💻 Local Windows Installation & Quick Start
 
-1. **Write Your Scene Code**:
-   In the editor, define your scene by subclassing `Scene` (or `ThreeDScene`, `MovingCameraScene`, etc.):
-   ```python
-   from manim import *
+Running locally gives you **unlimited render length**, **no GPU quota constraints**, and **100% private rendering**.
 
-   class InteractiveDemo(Scene):
-       def construct(self):
-           title = Title("Manim Render Studio")
-           formula = MathTex(r"\int_{-\infty}^{\infty} e^{-x^2} dx = \sqrt{\pi}")
-           
-           self.play(Write(title))
-           self.wait(0.5)
-           self.play(FadeIn(formula, shift=UP))
-           self.play(formula.animate.scale(1.2).set_color(YELLOW))
-           self.wait(1)
+### Method 1: Automated 1-Click Launcher (Recommended for Windows)
+
+1. **Clone the Repository**:
+   ```cmd
+   git clone https://github.com/tamalriku/ManimGen.git
+   cd ManimGen
    ```
 
-2. **Select Scene Name**:
-   Enter the exact class name of the scene you want to render (e.g., `InteractiveDemo`).
+2. **Run the Batch Script**:
+   Double-click `run_studio.bat` (or run it in Command Prompt):
+   ```cmd
+   run_studio.bat
+   ```
 
-3. **Configure Render Options**:
-   - Choose your preferred resolution (e.g., `720p` for quick tests, `1080p` for final export).
-   - Choose the target aspect ratio (16:9, 9:16, 1:1, etc.).
-   - Set the frame rate (FPS) and background color.
+   **What `run_studio.bat` does automatically**:
+   - Detects Python 3.10+ on your system PATH.
+   - Creates a Python virtual environment (`venv`) on first run.
+   - Installs all dependencies (`manim`, `gradio`, `imageio-ffmpeg`, `pillow`, `numpy`).
+   - Automatically opens your default web browser to **`http://localhost:7860`**.
+   - Bypasses cloud ZeroGPU checks for instant local rendering.
 
-4. **Click "Render Animation"**:
-   Watch the live console output for Manim compilation and FFmpeg processing.
-
-5. **Preview & Download**:
-   Review the rendered video in the output video player and click the download button to save the MP4 file.
+> [!IMPORTANT]
+> Keep the black Command Prompt window open while using the Studio. Closing the window stops the local server.
 
 ---
 
-## ⚙️ Supported Render Options
+### Method 2: Manual Terminal Setup
 
-| Setting | Options / Presets | Description |
+1. **Clone & Navigate**:
+   ```bash
+   git clone https://github.com/tamalriku/ManimGen.git
+   cd ManimGen
+   ```
+
+2. **Create & Activate Virtual Environment**:
+   - **Windows (CMD/PowerShell)**:
+     ```cmd
+     python -m venv venv
+     venv\Scripts\activate
+     ```
+   - **Linux / macOS**:
+     ```bash
+     python3 -m venv venv
+     source venv/bin/activate
+     ```
+
+3. **Install Dependencies**:
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+4. **Start the Studio**:
+   ```bash
+   python app.py
+   ```
+   Open your browser and navigate to `http://localhost:7860`.
+
+---
+
+## 📐 LaTeX Support & Setup
+
+Manim Render Studio supports mathematical formula rendering using `MathTex` and `Tex`.
+
+### Installing LaTeX on Windows (Native MathTex)
+
+For full LaTeX math rendering locally, install **MiKTeX**:
+1. Open Command Prompt and run:
+   ```cmd
+   winget install --id MiKTeX.MiKTeX
+   ```
+2. Or download the installer from [miktex.org/download](https://miktex.org/download).
+3. `app.py` automatically detects MiKTeX at `~\AppData\Local\Programs\MiKTeX\miktex\bin\x64` and adds `latex.exe` and `dvisvgm.exe` to PATH.
+
+### Automatic Fallback (No LaTeX Installed)
+
+If LaTeX is not installed on your system, **Manim Render Studio will NOT crash**. 
+It includes a built-in `SafeMathTex` polyfill that automatically converts LaTeX math strings (e.g. `\text{Duty Cycle} = \frac{T_{ON}}{T_{period}} \times 100\%`) into readable text format and renders them using standard system fonts via `Text(...)`.
+
+---
+
+## 🚀 Usage Guide
+
+1. **Paste or Upload Code**:
+   Paste your Python script into the code editor or click **Upload .py File**.
+2. **Select Scene Class**:
+   Choose your target `Scene` class from the dropdown next to the render button.
+3. **Configure Options**:
+   Open **⚙️ Render Settings** to customize aspect ratio, resolution (720p/1080p/4K), frame rate (24/30/60 FPS), and background mode.
+4. **Render & Download**:
+   Click **🚀 Render Video**. When rendering completes, watch the preview and click **📥 Direct Download**.
+
+---
+
+## ⚙️ Supported Render Profiles
+
+| Setting | Options | Description |
 | :--- | :--- | :--- |
-| **Aspect Ratios** | `16:9` · `9:16` · `1:1` · `3:2` · `4:3` · `5:4` · `21:9` | Covers widescreen, vertical (Shorts/Reels), square (Instagram), and ultra-wide formats. |
-| **Resolutions** | `720p` (e.g. 1280×720)<br>`1080p` (e.g. 1920×1080)<br>`4K` (e.g. 3840×2160) | Exact pixel dimensions depend on the chosen aspect ratio. A full lookup table is built in. |
-| **Frame Rates** | `24 fps` · `30 fps` · `60 fps` | 24 fps for cinematic feel, 30 fps for standard web video (default), 60 fps for ultra-smooth motion. |
-| **Background** | **Solid Color** (color picker)<br>**Gradient** (two colors + direction)<br>**Transparent** (alpha .mov) | Gradient composites a PIL-generated image under a transparent render via FFmpeg. |
+| **Aspect Ratios** | `16:9` · `9:16` · `1:1` · `3:2` · `4:3` · `5:4` · `21:9` | Widescreen, Shorts/Reels/TikTok, Instagram post, and Ultrawide. |
+| **Resolutions** | `720p` · `1080p` · `4K` | Resolution scaling for target aspect ratio. |
+| **Frame Rates** | `24 fps` · `30 fps` · `60 fps` | Cinematic (24), Web standard (30), Ultra-smooth (60). |
+| **Background Modes** | **Solid Color** · **Gradient** · **Transparent** | Custom background color picker, 2-color gradient compositing via FFmpeg, or alpha MOV. |
 
 ---
 
-## 📐 LaTeX Support
+## 🔒 Hugging Face Spaces Deployment
 
-Manim Render Studio supports `Tex` and `MathTex` objects using system TeX Live installations.
+To deploy your own instance to Hugging Face Spaces:
 
-### Pre-installed Packages
-The Space environment comes pre-configured (via `packages.txt`) with essential TeX packages, including:
-- `texlive-latex-base`
-- `texlive-latex-extra`
-- `texlive-fonts-recommended`
-- `texlive-science` (provides `amsmath`, `amssymb`, `physics`, `mathtools`, and more)
-- `texlive-latex-recommended`
-- `dvisvgm`, `cm-super`, `ghostscript`
-
-### Custom LaTeX Packages
-If your scenes require specialized LaTeX packages (such as `tikz`, `chemfig`, or custom font packages), add them to `packages.txt` in the repo root:
-```text
-texlive-publishers
-texlive-pstricks
-```
-
----
-
-## ⏱️ Resource & Timeout Limits
-
-Please keep in mind the operational constraints of the Hugging Face Spaces environment:
-
-- **Free-Tier Hardware Specs**: Free-tier Spaces run on **2 vCPUs** and **16 GB RAM**.
-- **Execution Timeout**: Renders have a maximum processing timeout of **120 seconds (2 minutes)**.
-- **Complex Scenes**: Scenes involving thousands of mathematical objects, extensive 3D meshes, raymarching, or high-density particle animations rendered at 4K may exceed the 120-second timeout.
-- **Recommended Workflow**:
-  1. Always verify and preview your animation at **720p / 24 fps** first for quick iteration.
-  2. Once animation timing and positioning are confirmed, render at **1080p / 30 fps** or higher.
-- **Ephemeral Storage**: Rendered outputs and cached video fragments are stored temporarily in a scratch directory and automatically pruned after download or session expiration to prevent disk exhaustion.
-
----
-
-## 🔒 Security Notice
-
-> [!WARNING]
-> **Arbitrary Code Execution**: Manim scripts are executed as dynamic Python code. While the application runs inside an isolated HF Space environment, executing untrusted or arbitrary scripts poses inherent security risks. When deploying this space publicly, ensure strict sandboxing, avoid exposing secret environment variables, and monitor resource usage.
+1. Create a new Space on Hugging Face with **Gradio SDK**.
+2. Push this repository to your Space:
+   ```bash
+   git remote add hf https://huggingface.co/spaces/YOUR_USERNAME/YOUR_SPACE_NAME
+   git push hf main
+   ```
+3. System apt dependencies (`ffmpeg`, `texlive`, `libcairo2-dev`, `pango`, `dvisvgm`) will be automatically installed via `packages.txt`.
 
 ---
 
 ## 🛠️ Tech Stack
 
-- **[Python](https://www.python.org/)** (v3.10+) – Core runtime environment
-- **[Gradio](https://www.gradio.app/)** – Modern web UI and streaming response pipeline
-- **[Manim Community](https://www.manim.community/)** – Python library for explanatory math animations
-- **[FFmpeg](https://ffmpeg.org/)** – High-performance video encoding and post-processing
-- **[TeX Live](https://www.tug.org/texlive/)** – Comprehensive TeX system for typesetting mathematical notation
-- **[Pillow (PIL)](https://python-pillow.org/)** – Image processing, raster manipulation, and texture handling
+- **[Python](https://www.python.org/)** (v3.10+) – Core engine
+- **[Gradio](https://www.gradio.app/)** (v5.0+) – Web interface
+- **[Manim Community Edition](https://www.manim.community/)** – Explanatory math animation engine
+- **[FFmpeg](https://ffmpeg.org/)** (via `imageio-ffmpeg`) – Video encoding & gradient compositing
+- **[MiKTeX / TeX Live](https://miktex.org/)** – LaTeX formula typesetting
+- **[Pillow & NumPy](https://python-pillow.org/)** – Texture generation and image processing
