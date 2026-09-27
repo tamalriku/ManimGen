@@ -387,36 +387,52 @@ def _render_manim_impl(code, scene_name, aspect_ratio, resolution, bg_mode, soli
     progress(1.0, desc="Done!")
     return dest_path, dest_path, html_download, log_output
 
+CUSTOM_CSS = """
+/* Cap code input container height and enable internal scrolling */
+.gr-code {
+    max-height: 440px !important;
+    overflow-y: auto !important;
+}
+.monaco-editor-container {
+    max-height: 420px !important;
+}
+"""
+
 # -------------------------------------------------------------------------
 # GRADIO UI SETUP
 # -------------------------------------------------------------------------
 
-with gr.Blocks(theme=gr.themes.Soft(), title="Manim Render Studio") as demo:
+with gr.Blocks(title="Manim Render Studio", css=CUSTOM_CSS) as demo:
     gr.Markdown("# 🎬 Manim Render Studio\nWrite or upload Manim Python code to render beautiful mathematical animations!")
     gr.Markdown("*Note: This application executes user-provided code and is meant for local or trusted use only.*")
     
     with gr.Row():
-        # LEFT COLUMN: Inputs & Settings
+        # LEFT COLUMN: Code Input & Controls
         with gr.Column(scale=1):
             code_input = gr.Code(
                 value=DEFAULT_CODE,
                 language="python",
                 label="Manim Code",
-                lines=20
+                lines=16,
+                max_lines=18
             )
+            
+            with gr.Row():
+                scene_dropdown = gr.Dropdown(
+                    label="Select Scene Class to Render",
+                    choices=["ManimRenderStudio"],
+                    value="ManimRenderStudio",
+                    interactive=True,
+                    scale=2
+                )
+                render_btn = gr.Button("🚀 Render Video", variant="primary", scale=1)
+                
             file_upload = gr.File(
-                label="Or upload a .py file", 
+                label="Or Upload .py File", 
                 file_types=[".py"]
             )
             
-            scene_dropdown = gr.Dropdown(
-                label="Select Scene Class to Render",
-                choices=["ManimRenderStudio"],
-                value="ManimRenderStudio",
-                interactive=True
-            )
-            
-            with gr.Accordion("Render Settings", open=True):
+            with gr.Accordion("⚙️ Render Settings", open=True):
                 with gr.Row():
                     aspect_ratio = gr.Dropdown(
                         label="Aspect Ratio",
@@ -453,15 +469,13 @@ with gr.Blocks(theme=gr.themes.Soft(), title="Manim Render Studio") as demo:
                     visible=False
                 )
             
-            render_btn = gr.Button("🚀 Render Video", variant="primary")
-            
         # RIGHT COLUMN: Output
         with gr.Column(scale=1):
             video_out = gr.Video(label="Rendered Video", interactive=False)
             download_html = gr.HTML(label="Direct Download Button")
             file_out = gr.File(label="Alternative File Link")
             
-            with gr.Accordion("Render Log", open=False):
+            with gr.Accordion("📋 Render Log", open=False):
                 log_out = gr.Textbox(label="Console Output", lines=10, max_lines=20, interactive=False)
                 
     # ---------------------------------------------------------------------
