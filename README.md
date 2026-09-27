@@ -1,17 +1,3 @@
----
-title: Manim Render Studio
-emoji: 🎬
-colorFrom: purple
-colorTo: blue
-sdk: gradio
-sdk_version: 5.29.0
-python_version: 3.11.0
-app_file: app.py
-pinned: false
-license: mit
-short_description: Render Manim animations in your browser
----
-
 # 🎬 Manim Render Studio
 
 **Manim Render Studio** is a browser-based, interactive environment designed to write, preview, and render high-quality mathematical and programmatic animations using [Manim Community Edition](https://www.manim.community/). 
