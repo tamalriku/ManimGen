@@ -15,12 +15,16 @@ SECURITY WARNING:
 
 import os
 import re
+import time
 import tempfile
 import subprocess
 import shutil
 import gradio as gr
 import numpy as np
 from PIL import Image
+
+OUTPUT_DIR = os.path.abspath("output_renders")
+os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 # ZeroGPU support: required when running on HF Spaces with ZeroGPU hardware.
 # Falls back gracefully when running locally without the `spaces` package.
@@ -299,8 +303,20 @@ def _render_manim_impl(code, scene_name, aspect_ratio, resolution, bg_mode, soli
         except subprocess.TimeoutExpired as e:
             return None, None, f"FFmpeg timed out:\n{e}"
 
+    # 6. Copy output to persistent allowed directory for Gradio file serving
+    ext = os.path.splitext(final_output)[1]
+    dest_filename = f"{scene_name}_{int(time.time())}{ext}"
+    dest_path = os.path.join(OUTPUT_DIR, dest_filename)
+    shutil.copy(final_output, dest_path)
+
+    # Cleanup temporary build folder
+    try:
+        shutil.rmtree(temp_dir, ignore_errors=True)
+    except Exception:
+        pass
+
     progress(1.0, desc="Done!")
-    return final_output, final_output, log_output
+    return dest_path, dest_path, log_output
 
 # -------------------------------------------------------------------------
 # GRADIO UI SETUP
@@ -406,4 +422,8 @@ with gr.Blocks(theme=gr.themes.Soft(), title="Manim Render Studio") as demo:
     )
 
 if __name__ == "__main__":
-    demo.queue().launch(server_name="0.0.0.0", server_port=7860)
+    demo.queue().launch(
+        server_name="0.0.0.0",
+        server_port=7860,
+        allowed_paths=[OUTPUT_DIR, tempfile.gettempdir()]
+    )
