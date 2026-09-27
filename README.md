@@ -9,7 +9,7 @@ python_version: 3.11.0
 app_file: app.py
 pinned: false
 license: mit
-short_description: Render Manim animations in your browser locally or on HF Spaces
+short_description: Render Manim animations locally or on HF Spaces
 ---
 
 # 🎬 Manim Render Studio
