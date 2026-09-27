@@ -27,6 +27,16 @@ from PIL import Image
 OUTPUT_DIR = os.path.abspath("output_renders")
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
+# Automatic ffmpeg fallback using imageio_ffmpeg if system ffmpeg is missing
+if shutil.which("ffmpeg") is None:
+    try:
+        import imageio_ffmpeg
+        ffmpeg_exe = imageio_ffmpeg.get_ffmpeg_exe()
+        ffmpeg_dir = os.path.dirname(ffmpeg_exe)
+        os.environ["PATH"] = ffmpeg_dir + os.path.pathsep + os.environ.get("PATH", "")
+    except Exception:
+        pass
+
 # ZeroGPU support: required when running on HF Spaces with ZeroGPU hardware.
 # Falls back gracefully when running locally without the `spaces` package.
 try:
