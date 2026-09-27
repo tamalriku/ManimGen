@@ -91,8 +91,8 @@ class ManimRenderStudio(Scene):
         self.play(Create(circle))
         self.play(circle.animate.set_fill(PURPLE, opacity=0.6))
 
-        # Math equation
-        equation = MathTex(r"e^{i\pi} + 1 = 0", font_size=64)
+        # Math equation (Text works on all systems without LaTeX)
+        equation = Text("e^(iπ) + 1 = 0", font_size=54)
         equation.next_to(circle, DOWN, buff=0.5)
         self.play(Write(equation))
         self.wait(1)
@@ -315,6 +315,17 @@ def _render_manim_impl(code, scene_name, aspect_ratio, resolution, bg_mode, soli
         result = subprocess.run(manim_cmd, cwd=temp_dir, capture_output=True, text=True, timeout=120)
         log_output = result.stdout + "\n" + result.stderr
         if result.returncode != 0:
+            if "tex_to_svg_file" in log_output or "latex" in log_output.lower() or "dvisvgm" in log_output.lower():
+                log_output += (
+                    "\n\n"
+                    "===========================================================\n"
+                    "💡 LATEX NOT INSTALLED NOTICE:\n"
+                    "Your scene uses MathTex or Tex, which requires LaTeX (MiKTeX/TeX Live).\n"
+                    "Options:\n"
+                    "1. Install MiKTeX on Windows: run 'winget install MiKTeX.MiKTeX' in CMD.\n"
+                    "2. Or replace MathTex(r'...') with standard Text('...') which works out-of-the-box!\n"
+                    "===========================================================\n"
+                )
             return None, None, "", f"Manim Error:\n{log_output}"
     except subprocess.TimeoutExpired as e:
         return None, None, "", f"Render timed out after 120 seconds:\n{e}"
