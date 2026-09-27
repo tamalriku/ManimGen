@@ -37,6 +37,11 @@ if shutil.which("ffmpeg") is None:
     except Exception:
         pass
 
+# Automatic MiKTeX / LaTeX path detection on Windows
+MIKTEX_PATH = os.path.expanduser(r"~\AppData\Local\Programs\MiKTeX\miktex\bin\x64")
+if os.path.exists(MIKTEX_PATH) and MIKTEX_PATH not in os.environ.get("PATH", ""):
+    os.environ["PATH"] = MIKTEX_PATH + os.path.pathsep + os.environ.get("PATH", "")
+
 # ZeroGPU support: only enable when running ON Hugging Face Spaces environment
 IS_ON_HF_SPACES = "SPACE_ID" in os.environ or "SYSTEM" in os.environ
 if IS_ON_HF_SPACES:
