@@ -7,10 +7,6 @@ echo =======================================================================
 echo               🎬 MANIM RENDER STUDIO - LOCAL LAUNCHER
 echo =======================================================================
 echo.
-echo  This script will start your local Manim rendering server on Windows.
-echo  No GPU quotas, no cloud limits, 100%% private & unlimited local rendering!
-echo =======================================================================
-echo.
 
 :: 1. Check Python
 python --version >nul 2>&1
@@ -24,44 +20,47 @@ if %errorlevel% neq 0 (
 )
 
 for /f "tokens=*" %%i in ('python --version') do set PYTHON_VER=%%i
-echo [✓] Found %PYTHON_VER%
+echo [✓] %PYTHON_VER%
 
-:: 2. Create Virtual Environment
+:: 2. Create Virtual Environment if missing
 if not exist "venv\Scripts\activate.bat" (
     echo.
-    echo [INFO] First time setup detected. Creating Python virtual environment (venv)...
+    echo [INFO] Creating Python virtual environment (venv)...
     python -m venv venv
     if %errorlevel% neq 0 (
-        echo [ERROR] Failed to create virtual environment. Please check your Python installation.
+        echo [ERROR] Failed to create virtual environment.
         pause
         exit /b 1
     )
-    echo [✓] Virtual environment created successfully.
+    echo [✓] Virtual environment created.
 )
 
 :: 3. Activate Virtual Environment
-echo [INFO] Activating virtual environment...
 call venv\Scripts\activate.bat
 
-:: 4. Install Dependencies
-echo [INFO] Checking & installing dependencies (Manim, Gradio, FFmpeg, PIL)...
-python -m pip install --upgrade pip --quiet
-pip install -r requirements.txt
+:: 4. Quick check if manim is installed
+python -c "import manim" >nul 2>&1
 if %errorlevel% neq 0 (
-    echo [WARNING] Dependency check completed with warnings. Attempting to launch...
+    echo.
+    echo [INFO] First-time setup: Installing Manim dependencies...
+    echo (This takes 1-2 minutes on first run, please wait...)
+    python -m pip install --upgrade pip --quiet
+    pip install -r requirements.txt
+    echo [✓] Installation complete!
+) else (
+    echo [✓] All required packages are ready!
 )
 
-:: 5. Open Web Browser
+:: 5. Open Web Browser and Start Server
 echo.
 echo =======================================================================
-echo  🚀 STARTING LOCAL STUDIO AT: http://localhost:7860
-echo  Press Ctrl+C in this terminal window anytime to stop the server.
+echo  🚀 STARTING SERVER AT: http://localhost:7860
+echo  Keep this window open while using the Studio.
 echo =======================================================================
 echo.
 
 start "" "http://localhost:7860"
 
-:: 6. Launch Application
 python app.py
 
 pause
