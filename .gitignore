@@ -1,1 +1,5 @@
-﻿output_renders/\nvenv/\n__pycache__/\n*.pyc\n
+output_renders/
+venv/
+__pycache__/
+*.pyc
+media/

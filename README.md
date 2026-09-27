@@ -1,46 +1,32 @@
----
-title: Manim Render Studio
-emoji: 🎬
-colorFrom: purple
-colorTo: blue
-sdk: gradio
-sdk_version: 5.29.0
-python_version: 3.11.0
-app_file: app.py
-pinned: false
-license: mit
-short_description: Render Manim animations locally or on HF Spaces
----
-
 # 🎬 Manim Render Studio
 
-**Manim Render Studio** is a browser-based, interactive environment designed to write, preview, and render high-quality mathematical and programmatic animations using [Manim Community Edition](https://www.manim.community/).
+**Manim Render Studio** is a fully local, browser-based desktop application designed to write, preview, and render high-quality mathematical and programmatic animations using [Manim Community Edition](https://www.manim.community/).
 
-Whether you are running locally on your PC or deploying to Hugging Face Spaces, Manim Render Studio makes creating educational content, scientific visualizations, and social media clips effortless.
+Designed specifically for local execution with **zero timeouts**, **unlimited render lengths**, and **100% privacy**.
 
 ---
 
 ## ✨ Features
 
-- **In-Browser Code Editor**: Fixed-height editor with internal scrollbars and syntax highlighting—no more infinite page scrolling when pasting long code.
-- **1-Click Local Execution**: Includes `run_studio.bat` for automated 1-click Windows setup, virtual environment creation, and browser launching.
-- **Unlimited Local Rendering**: Zero timeouts when running locally—render complex, long scenes at high FPS without cloud limits.
+- **In-Browser Code Editor**: Fixed-height editor with internal scrollbars and syntax highlighting—no infinite page scrolling when pasting long code.
+- **1-Click Local Launcher**: Includes `run_studio.bat` for automated 1-click Windows setup, virtual environment creation, and instant browser launching.
+- **Unlimited Local Rendering**: Zero timeouts—render complex, multi-minute scenes at high FPS without cloud restrictions.
 - **Robust LaTeX & Fallback Engine**:
   - Native LaTeX equation rendering (`MathTex` & `Tex`) via MiKTeX / TeX Live.
-  - Automatic `SafeMathTex` polyfill fallback to `Text(...)` if LaTeX is not installed on the system, preventing crashes.
+  - Automatic `SafeMathTex` polyfill fallback to `Text(...)` if LaTeX is not installed on the system, preventing render crashes.
 - **Customizable Render Profiles**:
   - **Aspect Ratios**: `16:9` (Widescreen), `9:16` (Reels/Shorts/TikTok), `1:1` (Instagram), `3:2`, `4:3`, `5:4`, `21:9` (Ultrawide).
   - **Resolutions**: `720p`, `1080p`, and `4K`.
   - **Frame Rates**: `24 fps` (cinematic), `30 fps` (standard), `60 fps` (ultra-smooth).
   - **Backgrounds**: Solid colors, 2-color gradients (Vertical, Horizontal, Diagonal), and Alpha Transparency (.mov).
-- **Direct Base64 Video Downloads**: Client-side video downloading that works seamlessly in Private and Public Hugging Face Spaces as well as local setups.
+- **Direct Base64 Video Downloads**: Fast client-side video downloading directly from your local server.
 - **Automatic Scene Detection**: Auto-detects `Scene` class names in uploaded or pasted Python scripts.
 
 ---
 
 ## 💻 Local Windows Installation & Quick Start
 
-Running locally gives you **unlimited render length**, **no GPU quota constraints**, and **100% private rendering**.
+Running locally gives you **unlimited render length**, **zero quota constraints**, and **100% private rendering**.
 
 ### Method 1: Automated 1-Click Launcher (Recommended for Windows)
 
@@ -61,7 +47,6 @@ Running locally gives you **unlimited render length**, **no GPU quota constraint
    - Creates a Python virtual environment (`venv`) on first run.
    - Installs all dependencies (`manim`, `gradio`, `imageio-ffmpeg`, `pillow`, `numpy`).
    - Automatically opens your default web browser to **`http://localhost:7860`**.
-   - Bypasses cloud ZeroGPU checks for instant local rendering.
 
 > [!IMPORTANT]
 > Keep the black Command Prompt window open while using the Studio. Closing the window stops the local server.
@@ -143,20 +128,6 @@ It includes a built-in `SafeMathTex` polyfill that automatically converts LaTeX 
 | **Resolutions** | `720p` · `1080p` · `4K` | Resolution scaling for target aspect ratio. |
 | **Frame Rates** | `24 fps` · `30 fps` · `60 fps` | Cinematic (24), Web standard (30), Ultra-smooth (60). |
 | **Background Modes** | **Solid Color** · **Gradient** · **Transparent** | Custom background color picker, 2-color gradient compositing via FFmpeg, or alpha MOV. |
-
----
-
-## 🔒 Hugging Face Spaces Deployment
-
-To deploy your own instance to Hugging Face Spaces:
-
-1. Create a new Space on Hugging Face with **Gradio SDK**.
-2. Push this repository to your Space:
-   ```bash
-   git remote add hf https://huggingface.co/spaces/YOUR_USERNAME/YOUR_SPACE_NAME
-   git push hf main
-   ```
-3. System apt dependencies (`ffmpeg`, `texlive`, `libcairo2-dev`, `pango`, `dvisvgm`) will be automatically installed via `packages.txt`.
 
 ---
 

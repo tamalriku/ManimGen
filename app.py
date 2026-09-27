@@ -1,16 +1,8 @@
 """
-Manim Render Studio — A browser-based Manim animation renderer.
+Manim Render Studio — A local desktop Manim animation renderer.
 
-Deploy on Hugging Face Spaces (Docker SDK) to render Manim scenes
-from user-submitted Python code.
-
-SECURITY WARNING:
-    This application executes arbitrary user-supplied Python code via the
-    `manim` CLI. It is NOT safe for fully public, untrusted multi-tenant
-    deployment without proper sandboxing (e.g. gVisor, nsjail, Firecracker).
-    The denylist check below is a soft heuristic guard only — it is trivially
-    bypassable and is NOT a substitute for real isolation.
-    For a personal / portfolio Space this is acceptable.
+Run locally on your Windows PC to render Manim scenes from Python code
+with unlimited render lengths, no cloud limits, and zero timeouts.
 """
 
 import os
@@ -41,17 +33,6 @@ if shutil.which("ffmpeg") is None:
 MIKTEX_PATH = os.path.expanduser(r"~\AppData\Local\Programs\MiKTeX\miktex\bin\x64")
 if os.path.exists(MIKTEX_PATH) and MIKTEX_PATH not in os.environ.get("PATH", ""):
     os.environ["PATH"] = MIKTEX_PATH + os.path.pathsep + os.environ.get("PATH", "")
-
-# ZeroGPU support: only enable when running ON Hugging Face Spaces environment
-IS_ON_HF_SPACES = "SPACE_ID" in os.environ or "SYSTEM" in os.environ
-if IS_ON_HF_SPACES:
-    try:
-        import spaces
-        ZEROGPU_AVAILABLE = True
-    except ImportError:
-        ZEROGPU_AVAILABLE = False
-else:
-    ZEROGPU_AVAILABLE = False
 
 # -------------------------------------------------------------------------
 # CONSTANTS & CONFIGURATION
@@ -208,23 +189,8 @@ def toggle_bg_options(bg_mode):
     else: # Transparent
         return gr.update(visible=False), gr.update(visible=False), gr.update(visible=False), gr.update(visible=False)
 
-# Apply @spaces.GPU decorator only when running on ZeroGPU hardware.
-# This requests a GPU allocation for the duration of the render call.
-# Manim itself is CPU-based, but ZeroGPU requires at least one decorated function.
-if ZEROGPU_AVAILABLE:
-    @spaces.GPU(duration=300)
-    def render_manim(code, scene_name, aspect_ratio, resolution, bg_mode, solid_color,
-                     grad_start, grad_end, grad_dir, fps, progress=gr.Progress()):
-        return _render_manim_impl(code, scene_name, aspect_ratio, resolution, bg_mode,
-                                  solid_color, grad_start, grad_end, grad_dir, fps, progress)
-else:
-    def render_manim(code, scene_name, aspect_ratio, resolution, bg_mode, solid_color,
-                     grad_start, grad_end, grad_dir, fps, progress=gr.Progress()):
-        return _render_manim_impl(code, scene_name, aspect_ratio, resolution, bg_mode,
-                                  solid_color, grad_start, grad_end, grad_dir, fps, progress)
-
 def generate_download_html(file_path: str) -> str:
-    """Generate a client-side Data URI download button for 100% reliable download in Private HF Spaces."""
+    """Generate a client-side Data URI download button for 100% reliable download on local desktop."""
     if not file_path or not os.path.exists(file_path):
         return ""
     
@@ -311,8 +277,8 @@ if shutil.which("latex") is None and shutil.which("xelatex") is None:
     manim.Tex = SafeMathTex
 """
 
-def _render_manim_impl(code, scene_name, aspect_ratio, resolution, bg_mode, solid_color,
-                       grad_start, grad_end, grad_dir, fps, progress=gr.Progress()):
+def render_manim(code, scene_name, aspect_ratio, resolution, bg_mode, solid_color,
+                 grad_start, grad_end, grad_dir, fps, progress=gr.Progress()):
     """Main rendering function."""
     # 1. Validation
     if not scene_name:
@@ -555,7 +521,7 @@ with gr.Blocks(title="Manim Render Studio", css=CUSTOM_CSS) as demo:
 
 if __name__ == "__main__":
     demo.queue().launch(
-        server_name="0.0.0.0",
+        server_name="127.0.0.1",
         server_port=7860,
         allowed_paths=[OUTPUT_DIR, tempfile.gettempdir()]
     )
