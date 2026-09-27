@@ -8,7 +8,6 @@ Designed specifically for local execution with **zero timeouts**, **unlimited re
 
 ## ✨ Features
 
-- **In-Browser Code Editor**: Fixed-height editor with internal scrollbars and syntax highlighting—no infinite page scrolling when pasting long code.
 - **1-Click Local Launcher**: Includes `run_studio.bat` for automated 1-click Windows setup, virtual environment creation, and instant browser launching.
 - **Unlimited Local Rendering**: Zero timeouts—render complex, multi-minute scenes at high FPS without cloud restrictions.
 - **Robust LaTeX & Fallback Engine**:
